@@ -137,11 +137,8 @@
     function setTodayFields(){
       const now = new Date();
       $('tLand').value = toDT(now);
-      if ('valueAsDate' in $('date')) {
-        $('date').valueAsDate = new Date();
-      } else {
-        $('date').value = todayStr();
-      }
+      // Robust local date (avoid valueAsDate timezone quirks on iOS)
+      $('date').value = todayStr();
     }
 
     function init(){
@@ -155,12 +152,17 @@
       $('exportBtn').addEventListener('click', exportCSV);
       optimizeForIOS();
 
+      // Update date on app resume if the day changed
       document.addEventListener('visibilitychange', ()=>{
         if(!document.hidden){
-          const current = $('date').value;
-          if(current !== todayStr()){ setTodayFields(); renderList('today'); }
+          if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
         }
       }, {passive:true});
+
+      // Midnight roll-over check every 5 minutes
+      setInterval(()=>{
+        if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
+      }, 5*60*1000);
     }
 
     function attachInstantCalc(){
@@ -195,8 +197,7 @@
       $('fuelStart').addEventListener('input', ()=>{
         const L = parseFloat($('fuelAdded').value||'');
         const kg = isFinite(L)? L*DENSITY:0;
-        const val = parseFloat($('fuelStart').value)||'';
-        const v = parseFloat(val);
+        const v = parseFloat($('fuelStart').value||'');
         if(isFinite(v)) baseStartKg = v - kg;
       });
     }
