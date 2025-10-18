@@ -119,6 +119,22 @@
     const toDT = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const todayStr = ()=>{const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
 
+    function minutesToHHMM(mins){
+      mins = Math.max(0, Math.floor(mins||0));
+      const h = Math.floor(mins/60);
+      const m = mins%60;
+      return `${pad(h)}:${pad(m)}`;
+    }
+
+    function diffHHMM(tOff, tLand){
+      if(!tOff || !tLand) return '';
+      const a = new Date(tOff).getTime();
+      const b = new Date(tLand).getTime();
+      if(!isFinite(a)||!isFinite(b)) return '';
+      const mins = Math.max(0, Math.round((b-a)/60000));
+      return minutesToHHMM(mins);
+    }
+
     function init(){
       const now = new Date();
       $('tLand').value = toDT(now);
@@ -171,14 +187,22 @@
     }
 
     function save(){
+      const tOff = $('tOff').value;
+      const tLand = $('tLand').value;
+      let flightHM = diffHHMM(tOff, tLand);
+      if(!flightHM){
+        const mins = parseInt($('flightMins').value||'0',10);
+        if(mins>0) flightHM = minutesToHHMM(mins);
+      }
       const rec={
         id:crypto.randomUUID(),
         date:$('date').value,
         fuelAdded:$('fuelAdded').value,
         fuelStart:$('fuelStart').value,
         loc:$('loc').value.trim().toUpperCase(),
-        tOff:$('tOff').value,
-        tLand:$('tLand').value,
+        tOff,
+        tLand,
+        flightHM,
         fuelEnd:$('fuelEnd').value
       };
       const all=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
@@ -214,16 +238,18 @@
 
       const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—';
       const lines=[];
-      lines.push(' +ADDED(L) | START(kg) | LOC      | TOFF | LAND | END(kg) ');
-      lines.push('------------+-----------+----------+------+------ +--------');
+      lines.push(' +ADDED(L) | START(kg) | LOC      | TOFF | LAND | TIME  | END(kg) ');
+      lines.push('------------+-----------+----------+------+------ +-------+--------');
 
       for(const r of visible){
+        const hm = r.flightHM || diffHHMM(r.tOff, r.tLand) || '00:00';
         const line=[
           (r.fuelAdded||'—').toString().padStart(10,' '),
           (r.fuelStart||'—').toString().padStart(9,' '),
           (r.loc||'—').toString().padEnd(8,' '),
           tOnly(r.tOff).padEnd(5,' '),
           tOnly(r.tLand).padEnd(5,' '),
+          (hm||'00:00').toString().padEnd(5,' '),
           (r.fuelEnd||'—').toString().padStart(7,' ')
         ].join(' | ');
         lines.push(line);
@@ -235,7 +261,7 @@
       const rows=loadAll();
       const visible=rows.filter(r=>currentFilter==='all'?true:(r.date===todayStr()));
       if(!visible.length){ alert('No records to export.'); return; }
-      const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','fuelEnd'];
+      const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','flightTime','fuelEnd'];
       const csv=[headers.join(',')].concat(visible.map(r=>{
         const obj={
           date:r.date||'',
@@ -244,6 +270,7 @@
           loc:r.loc||'',
           tOff:(r.tOff||'').split('T')[1]?.slice(0,5)||'',
           tLand:(r.tLand||'').split('T')[1]?.slice(0,5)||'',
+          flightTime: r.flightHM || diffHHMM(r.tOff, r.tLand) || '',
           fuelEnd:r.fuelEnd||''
         };
         return headers.map(h=>{
