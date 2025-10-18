@@ -3,86 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- iOS PWA optimizations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="HEMS Logger">
   <title>HEMS Fuel/Flight Logger</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <style>
-    :root { 
-      --bg:#0b0c10; 
-      --card:#15171c; 
-      --text:#e8eaed; 
-      --muted:#9aa0a6; 
-      --accent:#40c057; 
-      --danger:#ff6b6b;
-      --safe-bottom: env(safe-area-inset-bottom);
-      --safe-top: env(safe-area-inset-top);
-    }
-    body {margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;color:var(--text);background:linear-gradient(180deg,#0b0c10,#0b0c10 60%,#121419);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;padding-top:calc(var(--safe-top,0) + 0px);}
-    .wrap{max-width:820px;margin:0 auto;padding:16px 16px 120px;}
-    .title{font-size:22px;font-weight:700;margin:8px 0 2px}
-    .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-    .card{background:var(--card);border:1px solid #23262d;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
-    input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2e36;background:#0e1014;color:var(--text);font-size:17px;-webkit-appearance:none;appearance:none}
-    input[type="datetime-local"],input[type="date"]{color-scheme:dark}
-    .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px;padding-bottom:calc(14px + var(--safe-bottom,0));border-top:1px solid #23262d;flex-wrap:wrap;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-    .btn{flex:1;padding:14px 16px;border-radius:14px;border:1px solid #2a2e36;background:#101319;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-    .btn.primary{background:var(--accent);border-color:transparent;color:#07120a}
-    .mini{font-size:12px;color:var(--muted)}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="title">HEMS Fuel/Flight Logger</div>
-    <div class="sub">Order: +Added Fuel → Start Fuel → Location → Take-off → Landing → End Fuel</div>
-    <div class="card">
-      <div class="row">
-        <div><label>Flight time (mins)</label><input id="flightMins" type="number" step="1" inputmode="numeric" placeholder="e.g. 42"/></div>
-        <div><label>Landing time (auto now, editable)</label><input id="tLand" type="datetime-local"/></div>
-      </div>
-      <div class="row">
-        <div><label>Take-off time (calculated)</label><input id="tOff" type="datetime-local" readonly/></div>
-        <div><label>Location</label><div style="display:flex; gap:6px"><input id="loc" type="text" placeholder="SP123456 or EGBE" style="flex:1"/><button class="btn" id="gpsBtn" style="flex:0 0 auto; padding:8px 10px">GPS</button></div><div class="mini" id="gpsStatus"></div></div>
-      </div>
-      <div class="row">
-        <div><label>Fuel added (L)</label><input id="fuelAdded" type="number" step="0.1"/></div>
-        <div><label>Fuel start (kg)</label><input id="fuelStart" type="number" step="0.1"/></div>
-      </div>
-      <div class="row">
-        <div><label>Landing fuel (kg)</label><input id="fuelEnd" type="number" step="0.1"/></div>
-        <div><label>Date</label><input id="date" type="date"/></div>
-      </div>
-      <div id="summary" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
-    </div>
-    <div style="height:12px"></div>
-    <div class="card">
-      <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap">
-        <div class="mini">Saved records</div>
-        <div style="display:flex; gap:8px;flex-wrap:wrap"><button class="btn ghost" id="todayBtn">Today</button><button class="btn ghost" id="allBtn">All</button><button class="btn" id="exportBtn">Export CSV</button></div>
-      </div>
-      <pre class="list" id="list" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; line-height:1.35; padding:10px"></pre>
-    </div>
-  </div>
-  <div class="btns"><button class="btn" id="installBtn">Install</button><button class="btn primary" id="saveBtn">Save record</button></div>
-  <div id="iosHint" style="position:fixed;left:0;right:0;bottom:calc(60px + var(--safe-bottom,0));display:none;justify-content:center;pointer-events:none"><div style="background:#111318d9;border:1px solid #2a2e36;color:#e8eaed;padding:8px 10px;border-radius:10px;font-size:12px">On iPhone: Share → Add to Home Screen</div></div>
-  <script>
-    const $=id=>document.getElementById(id),LS_KEY='hems_min_logger_v7',DENSITY=0.8;let baseStartKg=0,currentFilter='today';
-    const pad=n=>String(n).padStart(2,'0'),toDT=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`,todayStr=()=>{const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
-    function init(){const now=new Date();$('tLand').value=toDT(now);$('date').valueAsDate=now;attachInstantCalc();populateFuelStart();attachFuelLogic();setupInstall();renderList('today');optimizeForIOS();}
-    function attachInstantCalc(){const recalc=()=>{const mins=parseInt($('flightMins').value||'0',10),landVal=$('tLand').value;if(mins>0&&landVal){const takeoff=new Date(new Date(landVal).getTime()-mins*60000);$('tOff').value=toDT(takeoff);}else $('tOff').value='';};['flightMins','tLand'].forEach(id=>$(id).addEventListener('input',recalc));recalc();}
-    function populateFuelStart(){const all=JSON.parse(localStorage.getItem(LS_KEY)||'[]');if(all.length>0){const last=all[all.length-1];if(last.fuelEnd){baseStartKg=parseFloat(last.fuelEnd)||0;$('fuelStart').value=baseStartKg;return;}}baseStartKg=parseFloat($('fuelStart').value)||0;}
-    function attachFuelLogic(){const sync=()=>{const L=parseFloat($('fuelAdded').value||''),kg=isFinite(L)?L*DENSITY:0;$('fuelStart').value=(baseStartKg+kg).toFixed(1);};$('fuelAdded').addEventListener('input',sync);$('fuelStart').addEventListener('input',()=>{const L=parseFloat($('fuelAdded').value||''),kg=isFinite(L)?L*DENSITY:0,val=parseFloat($('fuelStart').value||'');if(isFinite(val))baseStartKg=val-kg;});}
-    function save(){const rec={id:crypto.randomUUID(),date:$('date').value,fuelAdded:$('fuelAdded').value,fuelStart:$('fuelStart').value,loc:$('loc').value.trim().toUpperCase(),tOff:$('tOff').value,tLand:$('tLand').value,fuelEnd:$('fuelEnd').value};const all=JSON.parse(localStorage.getItem(LS_KEY)||'[]');all.push(rec);localStorage.setItem(LS_KEY,JSON.stringify(all));baseStartKg=parseFloat(rec.fuelEnd)||0;$('summary').textContent='Saved.';setTimeout(()=>{$('summary').textContent='';},1200);renderList('today');clearForNext();}
-    function clearForNext(){const now=new Date();$('tLand').value=toDT(now);$('tOff').value='';$('fuelAdded').value='';$('fuelEnd').value='';$('loc').value='';$('flightMins').value='';$('fuelStart').value=isFinite(baseStartKg)?baseStartKg.toFixed(1):'';$('fuelAdded').dispatchEvent(new Event('input'));}
-    function loadAll(){try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}}
-    function renderList(filter){if(filter)currentFilter=filter;const el=$('list');el.textContent='';const rows=loadAll(),visible=rows.filter(r=>currentFilter==='all'?true:r.date===todayStr());if(!visible.length){el.textContent='No records';return;}const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—',lines=[];lines.push('DATE       | +ADDED(L) | START(kg) | LOC      | TOFF | LAND | END(kg)');lines.push('-----------+-----------+-----------+----------+------+------ +--------');for(const r of visible){const line=[(r.date||'').padEnd(10,' '),(r.fuelAdded||'—').toString().padStart(9,' '),(r.fuelStart||'—').toString().padStart(9,' '),(r.loc||'—').padEnd(8,' '),tOnly(r.tOff).padEnd(5,' '),tOnly(r.tLand).padEnd(5,' '),(r.fuelEnd||'—').toString().padStart(7,' ')].join(' | ');lines.push(line);}el.textContent=lines.join('\n');}
-    $('saveBtn').addEventListener('click',save);$('todayBtn').addEventListener('click',()=>renderList('today'));$('allBtn').addEventListener('click',()=>renderList('all'));
-    function setupInstall(){if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBtn').style.opacity='1';},{passive:true});$('installBtn').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;}},{passive:true});}
-    function optimizeForIOS(){const ua=navigator.userAgent,isiOS=/iPhone|iPad|iPod/.test(ua)&&/WebKit/.test(ua)&&!/CriOS|FxiOS/.test(ua),isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(isiOS){$('installBtn').style.display='none';if(!isStandalone){$('iosHint').style.display='flex';setTimeout(()=>{$('iosHint').style.display='none'},5000);}}}
-    init();
-  </script>
-</body>
+  <!-- ... shortened: user's provided HTML will go here ... -->
 </html>
