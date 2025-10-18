@@ -1,7 +1,10 @@
-# HEMS Logger (Fixed iPhone build)
-Upload all files to your GitHub repo root. Enable GitHub Pages (main branch, /root). 
+# HEMS Logger v1.3 (Compact Log)
+Upload all files to your GitHub repo root. Enable GitHub Pages (main branch, /root).
 Open in Safari → Share → Add to Home Screen.
-- Single column below 480px
-- Bottom padding increased to avoid overlap
-- GPS wired (requires HTTPS)
-- CSV export, Clear Today, append-to-bottom
+
+Changes:
+- Compact record list: removed DATE column
+- Kept header and divider
+- Font-size ~13px, line-height 1.2
+- Left-aligned
+- GPS requires HTTPS; falls back to lat,lon when OS grid not applicable
