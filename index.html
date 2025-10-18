@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <!-- iOS PWA optimizations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="HEMS Logger">
@@ -135,10 +134,18 @@
       return minutesToHHMM(mins);
     }
 
-    function init(){
+    function setTodayFields(){
       const now = new Date();
       $('tLand').value = toDT(now);
-      $('date').valueAsDate = now;
+      if ('valueAsDate' in $('date')) {
+        $('date').valueAsDate = new Date();
+      } else {
+        $('date').value = todayStr();
+      }
+    }
+
+    function init(){
+      setTodayFields();
       attachInstantCalc();
       populateFuelStart();
       attachFuelLogic();
@@ -147,6 +154,13 @@
       renderList('today');
       $('exportBtn').addEventListener('click', exportCSV);
       optimizeForIOS();
+
+      document.addEventListener('visibilitychange', ()=>{
+        if(!document.hidden){
+          const current = $('date').value;
+          if(current !== todayStr()){ setTodayFields(); renderList('today'); }
+        }
+      }, {passive:true});
     }
 
     function attachInstantCalc(){
@@ -181,8 +195,9 @@
       $('fuelStart').addEventListener('input', ()=>{
         const L = parseFloat($('fuelAdded').value||'');
         const kg = isFinite(L)? L*DENSITY:0;
-        const val = parseFloat($('fuelStart').value||'');
-        if(isFinite(val)) baseStartKg = val - kg;
+        const val = parseFloat($('fuelStart').value)||'';
+        const v = parseFloat(val);
+        if(isFinite(v)) baseStartKg = v - kg;
       });
     }
 
@@ -216,8 +231,7 @@
     }
 
     function clearForNext(){
-      const now=new Date();
-      $('tLand').value = toDT(now);
+      setTodayFields();           // ensure date resets to today on each new entry
       $('tOff').value = '';
       $('fuelAdded').value = '';
       $('fuelEnd').value = '';
@@ -302,7 +316,6 @@
       setTimeout(()=>$('summary').textContent='',1500);
     });
 
-    // iOS tweaks
     function optimizeForIOS(){
       const ua = navigator.userAgent;
       const isiOS = /iPhone|iPad|iPod/.test(ua) && /WebKit/.test(ua) && !/CriOS|FxiOS/.test(ua);
@@ -313,7 +326,6 @@
       }
     }
 
-    // PWA
     function setupInstall(){
       if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
       let deferredPrompt=null;
@@ -321,7 +333,6 @@
       $('installBtn').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; } }, {passive:true});
     }
 
-    // GPS
     function setupGPS(){ const btn=$('gpsBtn'); if(btn) btn.addEventListener('click', gpsToOsGrid6, {passive:true}); }
     function gpsToOsGrid6(){
       if(location.protocol !== 'https:' && location.hostname !== 'localhost'){ $('gpsStatus').textContent = 'GPS requires HTTPS (GitHub Pages/Netlify).'; return; }
