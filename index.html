@@ -6,35 +6,25 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="HEMS Logger">
-  <meta name="theme-color" content="#0b0c10">
   <title>HEMS Fuel/Flight Logger</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <style>
-    :root{ --bg:#0b0c10; --card:#15171c; --text:#e8eaed; --muted:#9aa0a6; --muted2:#c0c4ca; --accent:#40c057;
-           --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
-           --bottom-pad: 180px; }
-    html,body{height:100%;}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;
-         color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-         -webkit-text-size-adjust:100%; padding-top:calc(var(--safe-top,0px));}
-    .wrap{max-width:820px;margin:0 auto;padding:16px 16px var(--bottom-pad); box-sizing:border-box;}
+    :root { --bg:#0b0c10; --card:#15171c; --text:#e8eaed; --muted:#9aa0a6; --muted2:#c0c4ca; --accent:#40c057; --danger:#ff6b6b; --safe-bottom: env(safe-area-inset-bottom); --safe-top: env(safe-area-inset-top); }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;color:var(--text);background:linear-gradient(180deg,#0b0c10,#0b0c10 60%,#121419);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;padding-top:calc(var(--safe-top,0) + 0px);}  
+    .wrap{max-width:820px;margin:0 auto;padding:16px 16px 160px;}
     .title{font-size:22px;font-weight:700;margin:8px 0 2px}
     .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
     .card{background:var(--card);border:1px solid #23262d;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    /* Force single column earlier on narrow iPhone screens (homescreen renders slightly narrower) */
-    @media (max-width:560px){ .row{grid-template-columns:1fr; gap:10px} }
+    @media (max-width: 480px){ .row{grid-template-columns:1fr; gap:12px} }
     label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
     input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2e36;background:#0e1014;color:var(--text);font-size:17px;-webkit-appearance:none;appearance:none}
-    input[type='datetime-local'],input[type='date']{color-scheme:dark}
-    .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.94);backdrop-filter:blur(10px);
-          display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0px));
-          border-top:1px solid #23262d;flex-wrap:wrap;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+    input[type="datetime-local"],input[type="date"]{color-scheme:dark}
+    .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0)); border-top:1px solid #23262d;flex-wrap:wrap;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     .btn{flex:1;padding:14px 16px;border-radius:14px;border:1px solid #2a2e36;background:#101319;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     .btn.primary{background:var(--accent);border-color:transparent;color:#07120a}
     .btn.ghost{background:transparent}
     .mini{font-size:12px;color:var(--muted)}
-    pre.list{white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2); text-align:left}
-    #fatal{display:none; position:fixed; inset:auto 12px calc(80px + var(--safe-bottom,0)) 12px; background:#3b0f0f; color:#ffd3d3; border:1px solid #803232; padding:10px; border-radius:10px; font-size:12px; z-index:9999; white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -49,12 +39,8 @@
           <input id="flightMins" type="number" step="1" inputmode="numeric" placeholder="e.g. 42"/>
         </div>
         <div>
-          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span>Landing time (auto now, editable)</span>
-            <button id="nowBtn" type="button" class="btn" style="flex:0 0 auto;padding:8px 10px;font-size:12px">Update Now</button>
-          </label>
+          <label>Landing time (auto now, editable)</label>
           <input id="tLand" type="datetime-local"/>
-          <div class="mini" id="timeStatus"></div>
         </div>
       </div>
 
@@ -76,17 +62,17 @@
       <div class="row">
         <div>
           <label>Fuel added (L)</label>
-          <input id="fuelAdded" type="number" step="0.1" inputmode="decimal"/>
+          <input id="fuelAdded" type="number" step="0.1"/>
         </div>
         <div>
           <label>Fuel start (kg)</label>
-          <input id="fuelStart" type="number" step="0.1" inputmode="decimal"/>
+          <input id="fuelStart" type="number" step="0.1"/>
         </div>
       </div>
       <div class="row">
         <div>
           <label>Landing fuel (kg)</label>
-          <input id="fuelEnd" type="number" step="0.1" inputmode="decimal"/>
+          <input id="fuelEnd" type="number" step="0.1"/>
         </div>
         <div>
           <label>Date</label>
@@ -109,50 +95,17 @@
           <button class="btn" id="clearTodayBtn" title="Delete all of today's records">Clear Today</button>
         </div>
       </div>
-      <pre class="list" id="list"></pre>
+      <pre class="list" id="list" style="white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2)"></pre>
     </div>
   </div>
 
-  <div class="btns" id="footerBtns">
+  <div class="btns">
     <button class="btn" id="installBtn" title="Install the app">Install</button>
     <button class="btn primary" id="saveBtn">Save record</button>
   </div>
-
-  <div id="fatal"></div>
-
-  <script>
-    function showFatal(err){
-      try{
-        const el = document.getElementById('fatal');
-        el.style.display='block';
-        const msg = (err && (err.stack || err.message || String(err))) || 'Unknown error';
-        el.textContent = 'App error:\n' + msg + '\n(You can screenshot this and share.)';
-        console.error('[HEMS] fatal', err);
-      }catch(e){}
-    }
-    window.addEventListener('error', (e)=>{ showFatal(e.error || e.message); });
-    window.addEventListener('unhandledrejection', (e)=>{ showFatal(e.reason || e); });
-
-    (function(){
-      if(!('crypto' in window)) window.crypto = {};
-      if(!crypto.randomUUID){
-        crypto.randomUUID = function(){
-          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
-            const r = Math.random()*16|0, v = c=='x'?r:(r&0x3|0x8);
-            return v.toString(16);
-          });
-        };
-      }
-      try{
-        const k='__hems__';
-        localStorage.setItem(k,'1'); localStorage.removeItem(k);
-        window.safeStorage = localStorage;
-      }catch(e){
-        window.safeStorage = { getItem(){return null}, setItem(){}, removeItem(){} };
-        console.warn('localStorage unavailable; running ephemeral.');
-      }
-    })();
-  </script>
+  <div id="iosHint" style="position:fixed;left:0;right:0;bottom:calc(60px + var(--safe-bottom,0));display:none;justify-content:center;pointer-events:none">
+    <div style="background:#111318d9;border:1px solid #2a2e36;color:#e8eaed;padding:8px 10px;border-radius:10px;font-size:12px">On iPhone: Share → Add to Home Screen</div>
+  </div>
 
   <script>
     const $ = (id)=>document.getElementById(id);
@@ -164,158 +117,263 @@
     const pad = (n)=>String(n).padStart(2,'0');
     const toDT = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const todayStr = ()=>{const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
-    const numFrom = (id)=>{ const el=$(id); const v=(el?.value||'').toString().trim().replace(',', '.'); const n=parseFloat(v); return Number.isFinite(n)?n:0; };
 
-    function adjustInsets(){
-      try{
-        const footer = $('footerBtns');
-        const hh = footer ? footer.offsetHeight : 160;
-        const extra = 24;
-        document.documentElement.style.setProperty('--bottom-pad', (hh + extra) + 'px');
-      }catch(e){}
-    }
-    window.addEventListener('resize', adjustInsets, {passive:true});
-    if(window.visualViewport){
-      visualViewport.addEventListener('resize', adjustInsets, {passive:true});
-      visualViewport.addEventListener('scroll', adjustInsets, {passive:true});
+    function minutesToHHMM(mins){
+      mins = Math.max(0, Math.floor(mins||0));
+      const h = Math.floor(mins/60);
+      const m = mins%60;
+      return `${pad(h)}:${pad(m)}`;
     }
 
-    const Deg=Math.PI/180;
-    function asYYYYMMDD(input){
-      if(!input) return '';
-      if(/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
-      const t = Date.parse(input);
-      if(Number.isNaN(t)) return '';
-      const d = new Date(t);
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    }
-    function setDateValue(el, ymd){
-      if(!el || !ymd) return false;
-      el.value = ymd;
-      el.setAttribute('value', ymd);
-      try{ el.valueAsDate = new Date(ymd + 'T00:00:00'); }catch(e){}
-      if(el.value !== ymd){
-        const prevType = el.getAttribute('type') || el.type || 'date';
-        try{ el.setAttribute('type','text'); el.value = ymd; el.setAttribute('type', prevType); }catch(e){}
-      }
-      return el.value === ymd;
-    }
-    function syncDateToLanding(){
-      const landVal = $('tLand').value || $('tLand')._rawAssignedValue || '';
-      const raw = landVal && landVal.includes('T') ? landVal.split('T')[0] : landVal;
-      const ymd = asYYYYMMDD(raw);
-      if(!ymd) return;
-      setDateValue($('date'), ymd);
+    function diffHHMM(tOff, tLand){
+      if(!tOff || !tLand) return '';
+      const a = new Date(tOff).getTime();
+      const b = new Date(tLand).getTime();
+      if(!isFinite(a)||!isFinite(b)) return '';
+      const mins = Math.max(0, Math.round((b-a)/60000));
+      return minutesToHHMM(mins);
     }
 
-    function minutesToHHMM(mins){ mins=Math.max(0,Math.floor(mins||0)); const h=Math.floor(mins/60), m=mins%60; return `${pad(h)}:${pad(m)}`; }
-    function diffHHMM(tOff,tLand){ if(!tOff||!tLand) return ''; const a=new Date(tOff).getTime(), b=new Date(tLand).getTime(); if(!isFinite(a)||!isFinite(b)) return ''; return minutesToHHMM(Math.max(0,Math.round((b-a)/60000))); }
+    function setTodayFields(){
+      const now = new Date();
+      $('tLand').value = toDT(now);
+      // Robust local date (avoid valueAsDate timezone quirks on iOS)
+      $('date').value = todayStr();
+    }
+
+    function init(){
+      setTodayFields();
+      attachInstantCalc();
+      populateFuelStart();
+      attachFuelLogic();
+      setupInstall();
+      setupGPS();
+      renderList('today');
+      $('exportBtn').addEventListener('click', exportCSV);
+      optimizeForIOS();
+
+      // Update date on app resume if the day changed
+      document.addEventListener('visibilitychange', ()=>{
+        if(!document.hidden){
+          if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
+        }
+      }, {passive:true});
+
+      // Midnight roll-over check every 5 minutes
+      setInterval(()=>{
+        if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
+      }, 5*60*1000);
+    }
+
     function attachInstantCalc(){
       const recalc = ()=>{
-        const mins = parseInt(numFrom('flightMins'),10);
-        const landVal = $('tLand').value || $('tLand')._rawAssignedValue || '';
+        const mins = parseInt($('flightMins').value||'0',10);
+        const landVal = $('tLand').value;
         if(mins>0 && landVal){
           const takeoff = new Date(new Date(landVal).getTime() - mins*60000);
           $('tOff').value = toDT(takeoff);
-        } else { $('tOff').value=''; }
-        if(landVal) syncDateToLanding();
+        } else $('tOff').value = '';
       };
       ['flightMins','tLand'].forEach(id=>$(id).addEventListener('input', recalc));
-      ['tLand'].forEach(id=>$(id).addEventListener('change', recalc));
       recalc();
     }
 
-    function setLandingNow(){ const now=new Date(); $('tLand').value=toDT(now); syncDateToLanding(); $('flightMins').dispatchEvent(new Event('input')); const s=$('timeStatus'); if(s) s.textContent='Landing set to current time'; }
-
     function populateFuelStart(){
-      const all = JSON.parse(safeStorage.getItem(LS_KEY) || '[]');
-      if(all.length>0){ const last=all[all.length-1]; if(last.fuelEnd){ baseStartKg=parseFloat(last.fuelEnd)||0; $('fuelStart').value=baseStartKg; return; } }
-      baseStartKg = numFrom('fuelStart'); $('fuelStart').value = baseStartKg ? baseStartKg.toFixed(1) : '';
+      const all = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+      if(all.length > 0){
+        const last = all[all.length-1];
+        if(last.fuelEnd){ baseStartKg = parseFloat(last.fuelEnd)||0; $('fuelStart').value = baseStartKg; return; }
+      }
+      baseStartKg = parseFloat($('fuelStart').value)||0;
     }
+
     function attachFuelLogic(){
-      const sync=()=>{ const L=numFrom('fuelAdded'); const kg=L*DENSITY; $('fuelStart').value=(baseStartKg+kg).toFixed(1); };
+      const sync = ()=>{
+        const L = parseFloat($('fuelAdded').value||'');
+        const kg = isFinite(L)? L*DENSITY:0;
+        $('fuelStart').value = (baseStartKg+kg).toFixed(1);
+      };
       $('fuelAdded').addEventListener('input', sync);
-      $('fuelAdded').addEventListener('change', sync);
-      $('fuelStart').addEventListener('input', ()=>{ const L=numFrom('fuelAdded'); const kg=L*DENSITY; const v=numFrom('fuelStart'); if(Number.isFinite(v)) baseStartKg=v-kg; });
+      $('fuelStart').addEventListener('input', ()=>{
+        const L = parseFloat($('fuelAdded').value||'');
+        const kg = isFinite(L)? L*DENSITY:0;
+        const v = parseFloat($('fuelStart').value||'');
+        if(isFinite(v)) baseStartKg = v - kg;
+      });
     }
 
     function save(){
-      const tOff=$('tOff').value, tLand=$('tLand').value || $('tLand')._rawAssignedValue || '';
-      let flightHM=diffHHMM(tOff,tLand); if(!flightHM){ const mins=parseInt(numFrom('flightMins'),10); if(mins>0) flightHM=minutesToHHMM(mins); }
-      const rec={ id:crypto.randomUUID(), date:$('date').value, fuelAdded:$('fuelAdded').value, fuelStart:$('fuelStart').value, loc:$('loc').value.trim().toUpperCase(), tOff, tLand, flightHM, fuelEnd:$('fuelEnd').value };
-      const all=JSON.parse(safeStorage.getItem(LS_KEY)||'[]'); all.push(rec); safeStorage.setItem(LS_KEY, JSON.stringify(all));
-      baseStartKg = parseFloat(rec.fuelEnd)||0; $('summary').textContent='Saved.'; setTimeout(()=>{$('summary').textContent='';},1200); renderList('today'); clearForNext();
+      const tOff = $('tOff').value;
+      const tLand = $('tLand').value;
+      let flightHM = diffHHMM(tOff, tLand);
+      if(!flightHM){
+        const mins = parseInt($('flightMins').value||'0',10);
+        if(mins>0) flightHM = minutesToHHMM(mins);
+      }
+      const rec={
+        id:crypto.randomUUID(),
+        date:$('date').value,
+        fuelAdded:$('fuelAdded').value,
+        fuelStart:$('fuelStart').value,
+        loc:$('loc').value.trim().toUpperCase(),
+        tOff,
+        tLand,
+        flightHM,
+        fuelEnd:$('fuelEnd').value
+      };
+      const all=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+      all.push(rec);
+      localStorage.setItem(LS_KEY,JSON.stringify(all));
+      baseStartKg = parseFloat(rec.fuelEnd)||0;
+      $('summary').textContent = 'Saved.';
+      setTimeout(()=>{$('summary').textContent='';},1200);
+      renderList('today');
+      clearForNext();
     }
-    function clearForNext(){ setTodayFields(); $('tOff').value=''; $('fuelAdded').value=''; $('fuelEnd').value=''; $('loc').value=''; $('flightMins').value=''; $('fuelStart').value=Number.isFinite(baseStartKg)?baseStartKg.toFixed(1):''; $('fuelAdded').dispatchEvent(new Event('input')); }
-    function loadAll(){ try{return JSON.parse(safeStorage.getItem(LS_KEY))||[]}catch(e){return[]} }
-    function renderList(filter){ if(filter) currentFilter=filter; const el=$('list'); el.textContent=''; const rows=loadAll(); const visible=rows.filter(r=> currentFilter==='all'?true:(r.date===todayStr())); if(!visible.length){ el.textContent='No records'; return; }
-      const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—'; const lines=[]; lines.push('+ADDED(L) | START(kg) | LOC      | TOFF | LAND | TIME  | END(kg)'); lines.push('-----------+-----------+----------+------+------ +-------+--------');
-      for(const r of visible){ const hm=r.flightHM||diffHHMM(r.tOff,r.tLand)||'00:00'; const line=[ (r.fuelAdded||'—').toString().padStart(9,' '), (r.fuelStart||'—').toString().padStart(9,' '), (r.loc||'—').toString().padEnd(8,' '), tOnly(r.tOff).padEnd(5,' '), tOnly(r.tLand).padEnd(5,' '), (hm||'00:00').toString().padEnd(5,' '), (r.fuelEnd||'—').toString().padStart(7,' ') ].join(' | '); lines.push(line);} el.textContent=lines.join('
-'); }
 
-    function exportCSV(){ const rows=loadAll(); const visible=rows.filter(r=>currentFilter==='all'?true:(r.date===todayStr())); if(!visible.length){ alert('No records to export.'); return; } const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','flightTime','fuelEnd']; const csv=[headers.join(',')].concat(visible.map(r=>{ const obj={ date:r.date||'', fuelAdded:r.fuelAdded||'', fuelStart:r.fuelStart||'', loc:r.loc||'', tOff:(r.tOff||'').split('T')[1]?.slice(0,5)||'', tLand:(r.tLand||'').split('T')[1]?.slice(0,5)||'', flightTime:r.flightHM||diffHHMM(r.tOff,r.tLand)||'', fuelEnd:r.fuelEnd||'' }; return headers.map(h=>{ const s=String(obj[h]??''); return /[",
-]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(','); })).join('
-'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`hems-records-${currentFilter==='all'?'all':todayStr()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }
-
-    function helmertWGS84toOSGB36(lat, lon){
-      const a1=6378137.0, b1=6356752.314245, e2_1=(a1*a1-b1*b1)/(a1*a1);
-      const phi=lat, lam=lon; const nu=a1/Math.sqrt(1-e2_1*Math.sin(phi)**2);
-      const x=nu*Math.cos(phi)*Math.cos(lam);
-      const y=nu*Math.cos(phi)*Math.sin(lam);
-      const z=(nu*(1-e2_1))*Math.sin(phi);
-      const tx=-446.448, ty=125.157, tz=-542.06; const s=20.4894e-6;
-      const rx=(-0.1502/3600)*Math.PI/180, ry=(-0.2470/3600)*Math.PI/180, rz=(-0.8421/3600)*Math.PI/180;
-      const x2=tx + (1+s)*x + (-rz)*y + (ry)*z;
-      const y2=ty + (rz)*x + (1+s)*y + (-rx)*z;
-      const z2=tz + (-ry)*x + (rx)*y + (1+s)*z;
-      const a2=6377563.396, b2=6356256.909, e2_2=(a2*a2-b2*b2)/(a2*a2);
-      const p=Math.hypot(x2,y2);
-      let phi2=Math.atan2(z2, p*(1-e2_2)); let phi2prev=0; const tol=1e-12; let nu2=0;
-      while(Math.abs(phi2-phi2prev)>tol){ phi2prev=phi2; nu2=a2/Math.sqrt(1-e2_2*Math.sin(phi2)**2); phi2=Math.atan2(z2+e2_2*nu2*Math.sin(phi2), p); }
-      const lam2=Math.atan2(y2,x2); return {lat:phi2, lon:lam2};
+    function clearForNext(){
+      setTodayFields();           // ensure date resets to today on each new entry
+      $('tOff').value = '';
+      $('fuelAdded').value = '';
+      $('fuelEnd').value = '';
+      $('loc').value = '';
+      $('flightMins').value = '';
+      $('fuelStart').value = isFinite(baseStartKg)? baseStartKg.toFixed(1): '';
+      $('fuelAdded').dispatchEvent(new Event('input'));
     }
-    function projectToBNG(phi, lam){
-      const a=6377563.396, b=6356256.909, F0=0.9996012717; const lat0=49*Math.PI/180, lon0=-2*Math.PI/180, N0=-100000, E0=400000; const e2=(a*a-b*b)/(a*a), n=(a-b)/(a+b); const nu=a*F0/Math.sqrt(1-e2*Math.sin(phi)**2); const rho=a*F0*(1-e2)/Math.pow(1-e2*Math.sin(phi)**2,1.5); const eta2=nu/rho-1; const M=b*F0*( (1+n+(5/4)*n**2+(5/4)*n**3)*(phi-lat0) - (3*n+3*n**2+(21/8)*n**3)*Math.sin(phi-lat0)*Math.cos(phi+lat0) + ((15/8)*n**2+(15/8)*n**3)*Math.sin(2*(phi-lat0))*Math.cos(2*(phi+lat0)) - (35/24)*n**3*Math.sin(3*(phi-lat0))*Math.cos(3*(phi+lat0)) ); const dl=lam-lon0; const cosφ=Math.cos(phi), tanφ=Math.tan(phi); const E=E0 + nu*( dl*cosφ + (dl**3*cosφ**3/6)*(1-tanφ**2+eta2) + (dl**5*cosφ**5/120)*(5-18*tanφ**2+tanφ**4+14*eta2-58*tanφ**2*eta2) ); const N=N0 + M + nu*tanφ*( (dl**2*cosφ**2/2) + (dl**4*cosφ**4/24)*(5-tanφ**2+9*eta2) + (dl**6*cosφ**6/720)*(61-58*tanφ**2+tanφ**4) ); return {E,N};
+
+    function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY))||[] }catch{return[]} }
+
+    function renderList(filter){
+      if(filter) currentFilter=filter;
+      const el=$('list'); el.textContent='';
+      const rows=loadAll();
+      const visible=rows.filter(r => currentFilter==='all' ? true : (r.date===todayStr()));
+      if(!visible.length){ el.textContent='No records'; return; }
+
+      const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—';
+      const lines=[];
+      lines.push(' +ADDED(L) | START(kg) | LOC      | TOFF | LAND | TIME  | END(kg) ');
+      lines.push('------------+-----------+----------+------+------ +-------+--------');
+
+      for(const r of visible){
+        const hm = r.flightHM || diffHHMM(r.tOff, r.tLand) || '00:00';
+        const line=[
+          (r.fuelAdded||'—').toString().padStart(10,' '),
+          (r.fuelStart||'—').toString().padStart(9,' '),
+          (r.loc||'—').toString().padEnd(8,' '),
+          tOnly(r.tOff).padEnd(5,' '),
+          tOnly(r.tLand).padEnd(5,' '),
+          (hm||'00:00').toString().padEnd(5,' '),
+          (r.fuelEnd||'—').toString().padStart(7,' ')
+        ].join(' | ');
+        lines.push(line);
+      }
+      el.textContent = lines.join('\n');
     }
-    function enToGridRef(E,N,digits=6){ if(E<0||E>700000||N<0||N>1300000) return ''; const e100k=Math.floor(E/100000), n100k=Math.floor(N/100000); const l1=(19-n100k)-((19-n100k)%5)+Math.floor((e100k+10)/5); const l2=((19-n100k)*5)%25 + (e100k%5); const letters='ABCDEFGHJKLMNOPQRSTUVWXYZ'; const pair=letters[l1]+letters[l2]; let e=Math.floor((E%100000)), n2=Math.floor((N%100000)); const scale=5-digits/2; e=Math.floor(e/10**scale); n2=Math.floor(n2/10**scale); const pad2=(x,len)=>String(x).padStart(len,'0'); const fig=digits/2; return `${pair}${pad2(e,fig)}${pad2(n2,fig)}`; }
-    function latLonToOSGrid(lat, lon){ const phi=lat*Math.PI/180, lam=lon*Math.PI/180; const os=helmertWGS84toOSGB36(phi,lam); const en=projectToBNG(os.lat, os.lon); const gr=enToGridRef(en.E,en.N,6); return gr||`${lat.toFixed(5)},${lon.toFixed(5)}`; }
 
-    function setupGPS(){ const btn=$('gpsBtn'); if(!btn) return; btn.addEventListener('click', ()=>{ const status=$('gpsStatus'); if(!navigator.geolocation){ if(status) status.textContent='GPS not available'; return; } status.textContent='Requesting position…'; navigator.geolocation.getCurrentPosition( pos=>{ const {latitude:lat, longitude:lon}=pos.coords; const grid=latLonToOSGrid(lat, lon); $('loc').value = grid; if(status) status.textContent= grid.includes(',')? 'Outside GB (lat,lon used)':'Location set (OS grid)'; }, err=>{ if(status) status.textContent='GPS error: '+err.message; }, {enableHighAccuracy:true, timeout:15000, maximumAge:0}); }, {passive:true}); }
-
-    function setTodayFields(){ const now=new Date(); $('tLand').value=toDT(now); syncDateToLanding(); const s=$('timeStatus'); if(s) s.textContent='Landing pre-filled to now'; }
-
-    function exportCSV(){ const rows=loadAll(); const visible=rows.filter(r=>currentFilter==='all'?true:(r.date===todayStr())); if(!visible.length){ alert('No records to export.'); return; } const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','flightTime','fuelEnd']; const csv=[headers.join(',')].concat(visible.map(r=>{ const obj={ date:r.date||'', fuelAdded:r.fuelAdded||'', fuelStart:r.fuelStart||'', loc:r.loc||'', tOff:(r.tOff||'').split('T')[1]?.slice(0,5)||'', tLand:(r.tLand||'').split('T')[1]?.slice(0,5)||'', flightTime:r.flightHM||diffHHMM(r.tOff,r.tLand)||'', fuelEnd:r.fuelEnd||'' }; return headers.map(h=>{ const s=String(obj[h]??''); return /[",
-]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(','); })).join('
-'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`hems-records-${currentFilter==='all'?'all':todayStr()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }
-
-    function init(){
-      try{
-        setTodayFields(); attachInstantCalc(); populateFuelStart(); attachFuelLogic(); setupGPS(); renderList('today');
-        $('exportBtn').addEventListener('click', exportCSV);
-        $('saveBtn').addEventListener('click', save);
-        $('todayBtn').addEventListener('click', ()=>renderList('today'));
-        $('allBtn').addEventListener('click', ()=>renderList('all'));
-        $('clearTodayBtn').addEventListener('click', ()=>{
-          if(!confirm("Delete ALL of today's records? This cannot be undone.")) return;
-          const all = loadAll();
-          const remaining = all.filter(r=> r.date !== todayStr());
-          safeStorage.setItem(LS_KEY, JSON.stringify(remaining));
-          if(remaining.length){ const last = remaining[remaining.length-1]; baseStartKg = parseFloat(last.fuelEnd)||0; if(Number.isFinite(baseStartKg)) $('fuelStart').value = baseStartKg.toFixed(1); }
-          renderList(currentFilter);
-          $('summary').textContent = "Today's records cleared.";
-          setTimeout(()=>{$('summary').textContent='';},1500);
-        });
-        const nowButton = $('nowBtn'); if(nowButton) nowButton.addEventListener('click', setLandingNow, {passive:true});
-        document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTodayFields(); }, {passive:true});
-        setInterval(()=>{ const d=$('date'); if(d && d.value !== todayStr()) setTodayFields(); }, 60000);
-        setTimeout(()=>{ const d=$('date'); if(!d.value) setTodayFields(); if(!$('tLand').value) setTodayFields(); }, 250);
-
-        adjustInsets();
-        setTimeout(adjustInsets, 100);
-        setTimeout(adjustInsets, 500);
-      }catch(e){ showFatal(e); }
+    function exportCSV(){
+      const rows=loadAll();
+      const visible=rows.filter(r=>currentFilter==='all'?true:(r.date===todayStr()));
+      if(!visible.length){ alert('No records to export.'); return; }
+      const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','flightTime','fuelEnd'];
+      const csv=[headers.join(',')].concat(visible.map(r=>{
+        const obj={
+          date:r.date||'',
+          fuelAdded:r.fuelAdded||'',
+          fuelStart:r.fuelStart||'',
+          loc:r.loc||'',
+          tOff:(r.tOff||'').split('T')[1]?.slice(0,5)||'',
+          tLand:(r.tLand||'').split('T')[1]?.slice(0,5)||'',
+          flightTime: r.flightHM || diffHHMM(r.tOff, r.tLand) || '',
+          fuelEnd:r.fuelEnd||''
+        };
+        return headers.map(h=>{
+          const s=String(obj[h]??'');
+          return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+        }).join(',');
+      })).join('\n');
+      const blob=new Blob([csv],{type:'text/csv'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+      a.download=`hems-records-${currentFilter==='all'?'all':todayStr()}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
     }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+    $('saveBtn').addEventListener('click',save);
+    $('todayBtn').addEventListener('click',()=>renderList('today'));
+    $('allBtn').addEventListener('click', ()=>renderList('all'));
+    $('clearTodayBtn').addEventListener('click', ()=>{
+      if(!confirm("Delete ALL of today's records? This cannot be undone.")) return;
+      const all = loadAll();
+      const remaining = all.filter(r=> r.date !== todayStr());
+      localStorage.setItem(LS_KEY, JSON.stringify(remaining));
+      if(remaining.length){
+        const last = remaining[remaining.length-1];
+        baseStartKg = parseFloat(last.fuelEnd)||0;
+        if(isFinite(baseStartKg)) $('fuelStart').value = baseStartKg.toFixed(1);
+      }
+      renderList(currentFilter);
+      $('summary').textContent = "Today's records cleared.";
+      setTimeout(()=>$('summary').textContent='',1500);
+    });
+
+    function optimizeForIOS(){
+      const ua = navigator.userAgent;
+      const isiOS = /iPhone|iPad|iPod/.test(ua) && /WebKit/.test(ua) && !/CriOS|FxiOS/.test(ua);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if(isiOS){
+        const btn = document.getElementById('installBtn'); if(btn) btn.style.display = 'none';
+        if(!isStandalone){ const hint=document.getElementById('iosHint'); if(hint){ hint.style.display='flex'; setTimeout(()=>{hint.style.display='none'}, 5000);} }
+      }
+    }
+
+    function setupInstall(){
+      if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+      let deferredPrompt=null;
+      window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('installBtn').style.opacity='1'; }, {passive:true});
+      $('installBtn').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; } }, {passive:true});
+    }
+
+    function setupGPS(){ const btn=$('gpsBtn'); if(btn) btn.addEventListener('click', gpsToOsGrid6, {passive:true}); }
+    function gpsToOsGrid6(){
+      if(location.protocol !== 'https:' && location.hostname !== 'localhost'){ $('gpsStatus').textContent = 'GPS requires HTTPS (GitHub Pages/Netlify).'; return; }
+      if(!navigator.geolocation){ $('gpsStatus').textContent = 'GPS not available'; return; }
+      $('gpsStatus').textContent = 'Requesting position…';
+      navigator.geolocation.getCurrentPosition(
+        pos=>{ const {latitude:lat, longitude:lon}=pos.coords;
+          try{ const grid=latLonToOSGrid6(lat, lon); $('loc').value=grid; $('gpsStatus').textContent=`Set from GPS (${lat.toFixed(5)}, ${lon.toFixed(5)}) → ${grid}`; }
+          catch(e){ $('loc').value = `${lat.toFixed(5)},${lon.toFixed(5)}`; $('gpsStatus').textContent = 'Outside OS Grid — using lat,lon'; }
+        },
+        err=>{ $('gpsStatus').textContent = 'GPS error: '+err.message; },
+        { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
+      );
+    }
+    function latLonToOSGrid6(lat, lon){
+      const rad=Math.PI/180;
+      const a84=6378137, b84=6356752.314245, e2_84=(a84*a84-b84*b84)/(a84*a84);
+      const phi=lat*rad, lam=lon*rad; const nu=a84/Math.sqrt(1-e2_84*Math.sin(phi)**2);
+      const x=nu*Math.cos(phi)*Math.cos(lam), y=nu*Math.cos(phi)*Math.sin(lam), z=(nu*(1-e2_84))*Math.sin(phi);
+      const tx=-446.448, ty=125.157, tz=-542.060, rx=-0.1502*rad/3600, ry=-0.2470*rad/3600, rz=-0.8421*rad/3600, s=20.4894/1e6;
+      const x2=tx + (1+s)*x + (-rz)*y + (ry)*z; const y2=ty + (rz)*x + (1+s)*y + (-rx)*z; const z2=tz + (-ry)*x + (rx)*y + (1+s)*z;
+      const a=6377563.396, b=6356256.909; const e2=(a*a-b*b)/(a*a);
+      const p=Math.hypot(x2,y2); let phi2=Math.atan2(z2, p*(1-e2)); let phiOld=0; while(Math.abs(phi2-phiOld)>1e-12){ phiOld=phi2; const nu2=a/Math.sqrt(1-e2*Math.sin(phi2)**2); phi2=Math.atan2(z2+e2*nu2*Math.sin(phi2), p); }
+      const lam2=Math.atan2(y2,x2); const F0=0.9996012717, lat0=49*rad, lon0=-2*rad, N0=-100000, E0=400000; const n=(a-b)/(a+b);
+      const nu3=a*F0/Math.sqrt(1-e2*Math.sin(phi2)**2), rho=a*F0*(1-e2)/Math.pow(1-e2*Math.sin(phi2)**2,1.5), eta2=nu3/rho-1;
+      const M = b*F0*((1+n+5/4*n**2+5/4*n**3)*(phi2-lat0) - (3*n+3*n**2+21/8*n**3)*Math.sin(phi2-lat0)*Math.cos(phi2+lat0) + (15/8*n**2+15/8*n**3)*Math.sin(2*(phi2-lat0))*Math.cos(2*(phi2+lat0)) - (35/24*n**3)*Math.sin(3*(phi2-lat0))*Math.cos(3*(phi2+lat0)));
+      const cosφ=Math.cos(phi2), tanφ=Math.tan(phi2), dlam=lam2-lon0;
+      const E = 400000 + nu3*( dlam*cosφ + (dlam**3)*cosφ**3*(1-tanφ*tanφ+eta2)/6 + (dlam**5)*cosφ**5*(5-18*tanφ*tanφ+tanφ**4+14*eta2-58*tanφ*tanφ*eta2)/120 );
+      const N = -100000 + M + nu3*tanφ*( (dlam**2)*cosφ**2/2 + (dlam**4)*cosφ**4*(5-tanφ*tanφ+9*eta2)/24 + (dlam**6)*cosφ**6*(61-58*tanφ*tanφ+tanφ**4)/720 );
+      return enToGrid(E,N);
+    }
+    function enToGrid(E,N){
+      const letters='ABCDEFGHJKLMNOPQRSTUVWXYZ'; const e=Math.floor(E/100000), n=Math.floor(N/100000);
+      if(e<0||e>6||n<0||n>12) throw new Error('Outside National Grid');
+      const l1=(19-n) - (19-n)%5 + Math.floor((e+10)/5); const l2=(19-n)*5 % 25 + e % 5; const letPair=letters[l1]+letters[l2];
+      const e100m=Math.floor((E%100000)/100).toString().padStart(3,'0'); const n100m=Math.floor((N%100000)/100).toString().padStart(3,'0');
+      return `${letPair}${e100m}${n100m}`;
+    }
+
+    init();
   </script>
 </body>
 </html>
