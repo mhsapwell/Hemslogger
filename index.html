@@ -10,25 +10,21 @@
   <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root { --bg:#0b0c10; --card:#15171c; --text:#e8eaed; --muted:#9aa0a6; --muted2:#c0c4ca; --accent:#40c057; --danger:#ff6b6b; --safe-bottom: env(safe-area-inset-bottom); --safe-top: env(safe-area-inset-top); }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;color:var(--text);background:#0b0c10;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;padding-top:calc(var(--safe-top,0) + 0px);}  
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;color:var(--text);background:linear-gradient(180deg,#0b0c10,#0b0c10 60%,#121419);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;padding-top:calc(var(--safe-top,0) + 0px);}  
     .wrap{max-width:820px;margin:0 auto;padding:16px 16px 160px;}
     .title{font-size:22px;font-weight:700;margin:8px 0 2px}
     .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
     .card{background:var(--card);border:1px solid #23262d;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:480px){ .row{grid-template-columns:1fr; gap:12px} }
+    @media (max-width: 480px){ .row{grid-template-columns:1fr; gap:12px} }
     label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
     input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2e36;background:#0e1014;color:var(--text);font-size:17px;-webkit-appearance:none;appearance:none}
     input[type="datetime-local"],input[type="date"]{color-scheme:dark}
     .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0)); border-top:1px solid #23262d;flex-wrap:wrap;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     .btn{flex:1;padding:14px 16px;border-radius:14px;border:1px solid #2a2e36;background:#101319;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-    .btn.small{font-size:12px; padding:10px 12px}
     .btn.primary{background:var(--accent);border-color:transparent;color:#07120a}
     .btn.ghost{background:transparent}
     .mini{font-size:12px;color:var(--muted)}
-    /* compact, left-aligned log */
-    pre.list{white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2); text-align:left}
-    .total{font-size:13px;color:var(--muted2); margin-top:8px; text-align:left}
   </style>
 </head>
 <body>
@@ -43,10 +39,7 @@
           <input id="flightMins" type="number" step="1" inputmode="numeric" placeholder="e.g. 42"/>
         </div>
         <div>
-          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span>Landing time (auto now, editable)</span>
-            <button id="nowBtn" class="btn small">Update Now</button>
-          </label>
+          <label>Landing time (auto now, editable)</label>
           <input id="tLand" type="datetime-local"/>
         </div>
       </div>
@@ -102,8 +95,7 @@
           <button class="btn" id="clearTodayBtn" title="Delete all of today's records">Clear Today</button>
         </div>
       </div>
-      <pre class="list" id="list"></pre>
-      <div class="total" id="dailyTotal"></div>
+      <pre class="list" id="list" style="white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2)"></pre>
     </div>
   </div>
 
@@ -123,25 +115,31 @@
     let currentFilter='today';
 
     const pad = (n)=>String(n).padStart(2,'0');
-    const toDT = (d)=>\`\${d.getFullYear()}-\${pad(d.getMonth()+1)}-\${pad(d.getDate())}T\${pad(d.getHours())}:\${pad(d.getMinutes())}\`;
-    const todayStr = ()=>{const d=new Date(); return \`\${d.getFullYear()}-\${pad(d.getMonth()+1)}-\${pad(d.getDate())}\`;};
+    const toDT = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const todayStr = ()=>{const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
 
     function minutesToHHMM(mins){
       mins = Math.max(0, Math.floor(mins||0));
       const h = Math.floor(mins/60);
       const m = mins%60;
-      return \`\${pad(h)}:\${pad(m)}\`;
+      return `${pad(h)}:${pad(m)}`;
     }
-    function HHMMtoMinutes(hhmm){ if(!hhmm) return 0; const [h,m]=(hhmm||'').split(':').map(Number); return (isFinite(h)&&isFinite(m))?(h*60+m):0; }
+
     function diffHHMM(tOff, tLand){
       if(!tOff || !tLand) return '';
       const a = new Date(tOff).getTime();
       const b = new Date(tLand).getTime();
       if(!isFinite(a)||!isFinite(b)) return '';
-      return minutesToHHMM(Math.max(0, Math.round((b-a)/60000)));
+      const mins = Math.max(0, Math.round((b-a)/60000));
+      return minutesToHHMM(mins);
     }
 
-    function setTodayFields(){ const now=new Date(); $('tLand').value = toDT(now); $('date').value = todayStr(); }
+    function setTodayFields(){
+      const now = new Date();
+      $('tLand').value = toDT(now);
+      // Robust local date (avoid valueAsDate timezone quirks on iOS)
+      $('date').value = todayStr();
+    }
 
     function init(){
       setTodayFields();
@@ -153,8 +151,18 @@
       renderList('today');
       $('exportBtn').addEventListener('click', exportCSV);
       optimizeForIOS();
-      document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && $('date').value!==todayStr()){ setTodayFields(); renderList('today'); } }, {passive:true});
-      $('nowBtn').addEventListener('click', ()=>{ setTodayFields(); $('flightMins').dispatchEvent(new Event('input')); }, {passive:true});
+
+      // Update date on app resume if the day changed
+      document.addEventListener('visibilitychange', ()=>{
+        if(!document.hidden){
+          if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
+        }
+      }, {passive:true});
+
+      // Midnight roll-over check every 5 minutes
+      setInterval(()=>{
+        if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
+      }, 5*60*1000);
     }
 
     function attachInstantCalc(){
@@ -224,7 +232,7 @@
     }
 
     function clearForNext(){
-      setTodayFields();
+      setTodayFields();           // ensure date resets to today on each new entry
       $('tOff').value = '';
       $('fuelAdded').value = '';
       $('fuelEnd').value = '';
@@ -236,24 +244,22 @@
 
     function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY))||[] }catch{return[]} }
 
-    function computeDailyTotal(rows){ return minutesToHHMM(rows.reduce((m,r)=>m+HHMMtoMinutes(r.flightHM||diffHHMM(r.tOff,r.tLand)||'00:00'),0)); }
-
     function renderList(filter){
       if(filter) currentFilter=filter;
       const el=$('list'); el.textContent='';
       const rows=loadAll();
       const visible=rows.filter(r => currentFilter==='all' ? true : (r.date===todayStr()));
-      if(!visible.length){ el.textContent='No records'; $('dailyTotal').textContent=''; return; }
+      if(!visible.length){ el.textContent='No records'; return; }
 
       const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—';
       const lines=[];
-      lines.push('+ADDED(L) | START(kg) | LOC      | TOFF | LAND | TIME  | END(kg)');
-      lines.push('-----------+-----------+----------+------+------ +-------+--------');
+      lines.push(' +ADDED(L) | START(kg) | LOC      | TOFF | LAND | TIME  | END(kg) ');
+      lines.push('------------+-----------+----------+------+------ +-------+--------');
 
       for(const r of visible){
         const hm = r.flightHM || diffHHMM(r.tOff, r.tLand) || '00:00';
         const line=[
-          (r.fuelAdded||'—').toString().padStart(9,' '),
+          (r.fuelAdded||'—').toString().padStart(10,' '),
           (r.fuelStart||'—').toString().padStart(9,' '),
           (r.loc||'—').toString().padEnd(8,' '),
           tOnly(r.tOff).padEnd(5,' '),
@@ -264,9 +270,6 @@
         lines.push(line);
       }
       el.textContent = lines.join('\n');
-
-      const total = computeDailyTotal(visible);
-      $('dailyTotal').textContent = currentFilter==='today' ? `Total Today: ${total}` : `Total (Shown): ${total}`;
     }
 
     function exportCSV(){
@@ -325,7 +328,7 @@
     }
 
     function setupInstall(){
-      if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js', {scope: './'}).then(() => navigator.serviceWorker.ready).catch(()=>{}); }
+      if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
       let deferredPrompt=null;
       window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('installBtn').style.opacity='1'; }, {passive:true});
       $('installBtn').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; } }, {passive:true});
