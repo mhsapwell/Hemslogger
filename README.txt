@@ -1,4 +1,7 @@
-# HEMS Logger v1.4.2 (Date Robust Fix)
-- Replaced valueAsDate with local formatter (YYYY-MM-DD) to avoid iOS timezone bug.
-- Updates date on load, after Save, on app resume, and checks periodically for midnight rollover.
-- Keeps v1.4 features (Flight Time HH:MM, compact log).
+
+# HEMS Logger v1.5
+New:
+1) **Update Now** button next to Landing time — sets Landing to current time and recalculates Take-off based on Flight minutes.
+2) **Running total** of flight time in HH:MM at the bottom of the list (Total Today for 'Today' view, Total (Shown) for 'All').
+
+All previous fixes retained (date robustness, compact log, GPS, CSV export, Clear Today, PWA).

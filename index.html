@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang=\"en\">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="HEMS Logger">
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />
+  <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">
+  <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\">
+  <meta name=\"apple-mobile-web-app-title\" content=\"HEMS Logger\">
   <title>HEMS Fuel/Flight Logger</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel=\"manifest\" href=\"manifest.webmanifest\">
   <style>
     :root { --bg:#0b0c10; --card:#15171c; --text:#e8eaed; --muted:#9aa0a6; --muted2:#c0c4ca; --accent:#40c057; --danger:#ff6b6b; --safe-bottom: env(safe-area-inset-bottom); --safe-top: env(safe-area-inset-top); }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Apple Color Emoji,Noto Color Emoji;color:var(--text);background:linear-gradient(180deg,#0b0c10,#0b0c10 60%,#121419);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;padding-top:calc(var(--safe-top,0) + 0px);}  
@@ -19,92 +19,98 @@
     @media (max-width: 480px){ .row{grid-template-columns:1fr; gap:12px} }
     label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
     input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2e36;background:#0e1014;color:var(--text);font-size:17px;-webkit-appearance:none;appearance:none}
-    input[type="datetime-local"],input[type="date"]{color-scheme:dark}
+    input[type=\"datetime-local\"],input[type=\"date\"]{color-scheme:dark}
     .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0)); border-top:1px solid #23262d;flex-wrap:wrap;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     .btn{flex:1;padding:14px 16px;border-radius:14px;border:1px solid #2a2e36;background:#101319;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    .btn.small{font-size:12px; padding:10px 12px}
     .btn.primary{background:var(--accent);border-color:transparent;color:#07120a}
     .btn.ghost{background:transparent}
     .mini{font-size:12px;color:var(--muted)}
+    .total{font-size:13px;color:var(--muted2); margin-top:8px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="title">HEMS Fuel/Flight Logger</div>
-    <div class="sub">Order: +Added Fuel (L) → Start Fuel (kg) → Location → Take-off → Landing → End Fuel (kg)</div>
+  <div class=\"wrap\">
+    <div class=\"title\">HEMS Fuel/Flight Logger</div>
+    <div class=\"sub\">Order: +Added Fuel (L) → Start Fuel (kg) → Location → Take-off → Landing → End Fuel (kg)</div>
 
-    <div class="card">
-      <div class="row">
+    <div class=\"card\">
+      <div class=\"row\">
         <div>
           <label>Flight time (minutes)</label>
-          <input id="flightMins" type="number" step="1" inputmode="numeric" placeholder="e.g. 42"/>
+          <input id=\"flightMins\" type=\"number\" step=\"1\" inputmode=\"numeric\" placeholder=\"e.g. 42\"/>
         </div>
         <div>
-          <label>Landing time (auto now, editable)</label>
-          <input id="tLand" type="datetime-local"/>
+          <label style=\"display:flex;align-items:center;justify-content:space-between;gap:8px\">
+            <span>Landing time (auto now, editable)</span>
+            <button id=\"nowBtn\" class=\"btn small\">Update Now</button>
+          </label>
+          <input id=\"tLand\" type=\"datetime-local\"/>
         </div>
       </div>
 
-      <div class="row">
+      <div class=\"row\">
         <div>
           <label>Take-off time (calculated)</label>
-          <input id="tOff" type="datetime-local" readonly/>
+          <input id=\"tOff\" type=\"datetime-local\" readonly/>
         </div>
         <div>
           <label>Location</label>
-          <div style="display:flex; gap:8px; flex-wrap:nowrap; align-items:center">
-            <input id="loc" type="text" placeholder="SP123456 or EGBE" style="flex:1; min-width:0"/>
-            <button class="btn" id="gpsBtn" style="flex:0 0 auto; padding:10px 12px; white-space:nowrap">GPS</button>
+          <div style=\"display:flex; gap:8px; flex-wrap:nowrap; align-items:center\">
+            <input id=\"loc\" type=\"text\" placeholder=\"SP123456 or EGBE\" style=\"flex:1; min-width:0\"/>
+            <button class=\"btn\" id=\"gpsBtn\" style=\"flex:0 0 auto; padding:10px 12px; white-space:nowrap\">GPS</button>
           </div>
-          <div class="mini" id="gpsStatus"></div>
+          <div class=\"mini\" id=\"gpsStatus\"></div>
         </div>
       </div>
 
-      <div class="row">
+      <div class=\"row\">
         <div>
           <label>Fuel added (L)</label>
-          <input id="fuelAdded" type="number" step="0.1"/>
+          <input id=\"fuelAdded\" type=\"number\" step=\"0.1\"/>
         </div>
         <div>
           <label>Fuel start (kg)</label>
-          <input id="fuelStart" type="number" step="0.1"/>
+          <input id=\"fuelStart\" type=\"number\" step=\"0.1\"/>
         </div>
       </div>
-      <div class="row">
+      <div class=\"row\">
         <div>
           <label>Landing fuel (kg)</label>
-          <input id="fuelEnd" type="number" step="0.1"/>
+          <input id=\"fuelEnd\" type=\"number\" step=\"0.1\"/>
         </div>
         <div>
           <label>Date</label>
-          <input id="date" type="date"/>
+          <input id=\"date\" type=\"date\"/>
         </div>
       </div>
 
-      <div id="summary" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+      <div id=\"summary\" style=\"margin-top:10px;font-size:13px;color:var(--muted)\"></div>
     </div>
 
-    <div style="height:12px"></div>
+    <div style=\"height:12px\"></div>
 
-    <div class="card">
-      <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap">
-        <div class="mini">Saved records</div>
-        <div style="display:flex; gap:8px;flex-wrap:wrap">
-          <button class="btn ghost" id="todayBtn">Today</button>
-          <button class="btn ghost" id="allBtn">All</button>
-          <button class="btn" id="exportBtn">Export CSV</button>
-          <button class="btn" id="clearTodayBtn" title="Delete all of today's records">Clear Today</button>
+    <div class=\"card\">
+      <div style=\"display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap\">
+        <div class=\"mini\">Saved records</div>
+        <div style=\"display:flex; gap:8px;flex-wrap:wrap\">
+          <button class=\"btn ghost\" id=\"todayBtn\">Today</button>
+          <button class=\"btn ghost\" id=\"allBtn\">All</button>
+          <button class=\"btn\" id=\"exportBtn\">Export CSV</button>
+          <button class=\"btn\" id=\"clearTodayBtn\" title=\"Delete all of today's records\">Clear Today</button>
         </div>
       </div>
-      <pre class="list" id="list" style="white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2)"></pre>
+      <pre class=\"list\" id=\"list\" style=\"white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.2; padding:10px; color:var(--muted2)\"></pre>
+      <div class=\"total\" id=\"dailyTotal\"></div>
     </div>
   </div>
 
-  <div class="btns">
-    <button class="btn" id="installBtn" title="Install the app">Install</button>
-    <button class="btn primary" id="saveBtn">Save record</button>
+  <div class=\"btns\">
+    <button class=\"btn\" id=\"installBtn\" title=\"Install the app\">Install</button>
+    <button class=\"btn primary\" id=\"saveBtn\">Save record</button>
   </div>
-  <div id="iosHint" style="position:fixed;left:0;right:0;bottom:calc(60px + var(--safe-bottom,0));display:none;justify-content:center;pointer-events:none">
-    <div style="background:#111318d9;border:1px solid #2a2e36;color:#e8eaed;padding:8px 10px;border-radius:10px;font-size:12px">On iPhone: Share → Add to Home Screen</div>
+  <div id=\"iosHint\" style=\"position:fixed;left:0;right:0;bottom:calc(60px + var(--safe-bottom,0));display:none;justify-content:center;pointer-events:none\">
+    <div style=\"background:#111318d9;border:1px solid #2a2e36;color:#e8eaed;padding:8px 10px;border-radius:10px;font-size:12px\">On iPhone: Share → Add to Home Screen</div>
   </div>
 
   <script>
@@ -115,14 +121,21 @@
     let currentFilter='today';
 
     const pad = (n)=>String(n).padStart(2,'0');
-    const toDT = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    const todayStr = ()=>{const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+    const toDT = (d)=>\`\${d.getFullYear()}-\${pad(d.getMonth()+1)}-\${pad(d.getDate())}T\${pad(d.getHours())}:\${pad(d.getMinutes())}\`;
+    const todayStr = ()=>{const d=new Date(); return \`\${d.getFullYear()}-\${pad(d.getMonth()+1)}-\${pad(d.getDate())}\`;};
 
     function minutesToHHMM(mins){
       mins = Math.max(0, Math.floor(mins||0));
       const h = Math.floor(mins/60);
       const m = mins%60;
-      return `${pad(h)}:${pad(m)}`;
+      return \`\${pad(h)}:\${pad(m)}\`;
+    }
+
+    function HHMMtoMinutes(hhmm){
+      if(!hhmm) return 0;
+      const [h,m] = hhmm.split(':').map(Number);
+      if(!isFinite(h)||!isFinite(m)) return 0;
+      return h*60+m;
     }
 
     function diffHHMM(tOff, tLand){
@@ -137,7 +150,6 @@
     function setTodayFields(){
       const now = new Date();
       $('tLand').value = toDT(now);
-      // Robust local date (avoid valueAsDate timezone quirks on iOS)
       $('date').value = todayStr();
     }
 
@@ -152,17 +164,13 @@
       $('exportBtn').addEventListener('click', exportCSV);
       optimizeForIOS();
 
-      // Update date on app resume if the day changed
       document.addEventListener('visibilitychange', ()=>{
         if(!document.hidden){
           if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
         }
       }, {passive:true});
 
-      // Midnight roll-over check every 5 minutes
-      setInterval(()=>{
-        if($('date').value !== todayStr()){ setTodayFields(); renderList('today'); }
-      }, 5*60*1000);
+      $('nowBtn').addEventListener('click', ()=>{ setTodayFields(); document.getElementById('flightMins').dispatchEvent(new Event('input')); }, {passive:true});
     }
 
     function attachInstantCalc(){
@@ -232,7 +240,7 @@
     }
 
     function clearForNext(){
-      setTodayFields();           // ensure date resets to today on each new entry
+      setTodayFields();
       $('tOff').value = '';
       $('fuelAdded').value = '';
       $('fuelEnd').value = '';
@@ -244,12 +252,21 @@
 
     function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY))||[] }catch{return[]} }
 
+    function computeDailyTotal(rows){
+      let totalMins = 0;
+      for(const r of rows){
+        const hm = r.flightHM || diffHHMM(r.tOff, r.tLand);
+        totalMins += HHMMtoMinutes(hm||'00:00');
+      }
+      return minutesToHHMM(totalMins);
+    }
+
     function renderList(filter){
       if(filter) currentFilter=filter;
       const el=$('list'); el.textContent='';
       const rows=loadAll();
       const visible=rows.filter(r => currentFilter==='all' ? true : (r.date===todayStr()));
-      if(!visible.length){ el.textContent='No records'; return; }
+      if(!visible.length){ el.textContent='No records'; $('dailyTotal').textContent=''; return; }
 
       const tOnly=s=>s?s.split('T')[1]?.slice(0,5):'—';
       const lines=[];
@@ -270,6 +287,9 @@
         lines.push(line);
       }
       el.textContent = lines.join('\n');
+
+      const total = currentFilter==='today' ? computeDailyTotal(visible) : minutesToHHMM(visible.reduce((m,r)=>m+HHMMtoMinutes(r.flightHM||diffHHMM(r.tOff, r.tLand)||'00:00'),0));
+      $('dailyTotal').textContent = currentFilter==='today' ? `Total Today: ${total}` : `Total (Shown): ${total}`;
     }
 
     function exportCSV(){
@@ -295,7 +315,7 @@
       })).join('\n');
       const blob=new Blob([csv],{type:'text/csv'});
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-      a.download=`hems-records-${currentFilter==='all'?'all':todayStr()}.csv`;
+      a.download=`hems-records-\${currentFilter==='all'?'all':todayStr()}.csv`;
       document.body.appendChild(a); a.click(); a.remove();
     }
 
@@ -303,7 +323,7 @@
     $('todayBtn').addEventListener('click',()=>renderList('today'));
     $('allBtn').addEventListener('click', ()=>renderList('all'));
     $('clearTodayBtn').addEventListener('click', ()=>{
-      if(!confirm("Delete ALL of today's records? This cannot be undone.")) return;
+      if(!confirm(\"Delete ALL of today's records? This cannot be undone.\")) return;
       const all = loadAll();
       const remaining = all.filter(r=> r.date !== todayStr());
       localStorage.setItem(LS_KEY, JSON.stringify(remaining));
@@ -313,7 +333,7 @@
         if(isFinite(baseStartKg)) $('fuelStart').value = baseStartKg.toFixed(1);
       }
       renderList(currentFilter);
-      $('summary').textContent = "Today's records cleared.";
+      $('summary').textContent = \"Today's records cleared.\";
       setTimeout(()=>$('summary').textContent='',1500);
     });
 
@@ -341,8 +361,8 @@
       $('gpsStatus').textContent = 'Requesting position…';
       navigator.geolocation.getCurrentPosition(
         pos=>{ const {latitude:lat, longitude:lon}=pos.coords;
-          try{ const grid=latLonToOSGrid6(lat, lon); $('loc').value=grid; $('gpsStatus').textContent=`Set from GPS (${lat.toFixed(5)}, ${lon.toFixed(5)}) → ${grid}`; }
-          catch(e){ $('loc').value = `${lat.toFixed(5)},${lon.toFixed(5)}`; $('gpsStatus').textContent = 'Outside OS Grid — using lat,lon'; }
+          try{ const grid=latLonToOSGrid6(lat, lon); $('loc').value=grid; $('gpsStatus').textContent=`Set from GPS (\${lat.toFixed(5)}, \${lon.toFixed(5)}) → \${grid}`; }
+          catch(e){ $('loc').value = `\${lat.toFixed(5)},\${lon.toFixed(5)}`; $('gpsStatus').textContent = 'Outside OS Grid — using lat,lon'; }
         },
         err=>{ $('gpsStatus').textContent = 'GPS error: '+err.message; },
         { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
@@ -370,7 +390,7 @@
       if(e<0||e>6||n<0||n>12) throw new Error('Outside National Grid');
       const l1=(19-n) - (19-n)%5 + Math.floor((e+10)/5); const l2=(19-n)*5 % 25 + e % 5; const letPair=letters[l1]+letters[l2];
       const e100m=Math.floor((E%100000)/100).toString().padStart(3,'0'); const n100m=Math.floor((N%100000)/100).toString().padStart(3,'0');
-      return `${letPair}${e100m}${n100m}`;
+      return `\${letPair}\${e100m}\${n100m}`;
     }
 
     init();
