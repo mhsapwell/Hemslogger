@@ -1,7 +1,12 @@
+# HEMS Logger v1.5.1
+Fixes:
+- Service worker: proper scope, version bump, offline navigation fallback, skipWaiting/clients.claim.
+- Restored compact, left-aligned log formatting from v1.4.2.
 
-# HEMS Logger v1.5
-New:
-1) **Update Now** button next to Landing time — sets Landing to current time and recalculates Take-off based on Flight minutes.
-2) **Running total** of flight time in HH:MM at the bottom of the list (Total Today for 'Today' view, Total (Shown) for 'All').
+Keeps:
+- "Update Now" button and running daily total (HH:MM).
+- Date robustness, GPS, CSV, Clear Today, PWA.
 
-All previous fixes retained (date robustness, compact log, GPS, CSV export, Clear Today, PWA).
+After updating:
+1) Commit all files.
+2) On iPhone: remove old Home Screen app, open site, Add to Home Screen again.
