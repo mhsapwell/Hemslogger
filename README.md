@@ -1,13 +1,10 @@
-# HEMS Logger (hardened build)
+# HEMS Logger (homescreen-safe)
 
-Single-file app. Designed to avoid iOS homescreen white-screen by:
-- Global error overlay (surfaces any JS error).
-- Safe localStorage fallback (no-ops if blocked).
-- UUID polyfill.
-- OS Grid GPS conversion.
+This build includes layout fixes for iOS Home Screen (standalone) mode:
+- Dynamic bottom padding that matches the footer’s height (prevents overlap).
+- Uses safe-area insets and adjusts on keyboard open/close via `visualViewport`.
+- Hardened against iOS white screen with an error overlay and safe storage.
+- OS Grid GPS.
 
 ## Deploy
-Upload index.html to GitHub Pages (main/root). Open in Safari, then Add to Home Screen.
-
-## If you previously saw a white screen
-Delete the old Home Screen icon first. If you ever deployed a service worker for this domain, clear Safari → Settings → Advanced → Website Data → Remove for your site.
+Upload `index.html` to GitHub Pages (root, main). Open in Safari, then Share → Add to Home Screen.
