@@ -39,8 +39,13 @@
           <input id="flightMins" type="number" step="1" inputmode="numeric" placeholder="e.g. 42"/>
         </div>
         <div>
-          <label>Landing time (auto now, editable)</label>
-          <input id="tLand" type="datetime-local"/>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+  <span>Landing time</span>
+  <button id="nowBtn" type="button" class="btn" style="flex:0 0 auto;padding:8px 10px;font-size:12px">
+    Update Now
+  </button>
+</label>
+<input id="tLand" type="datetime-local" />
         </div>
       </div>
 
@@ -374,6 +379,36 @@
     }
 
     init();
-  </script>
+  <script>
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function toDT(d){
+    return d.getFullYear() + '-' +
+           pad(d.getMonth()+1) + '-' +
+           pad(d.getDate()) + 'T' +
+           pad(d.getHours()) + ':' +
+           pad(d.getMinutes());
+  }
+
+  function setLandingNow(){
+    var el = document.getElementById('tLand');
+    if(!el) return;
+    el.value = toDT(new Date());
+    // trigger existing flight-time logic to update take-off
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+    var fm = document.getElementById('flightMins');
+    if (fm) fm.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+
+  // Auto-fill landing time on app open
+  document.addEventListener('DOMContentLoaded', function(){
+    var el = document.getElementById('tLand');
+    if (el && !el.value) {
+      el.value = toDT(new Date());
+    }
+    var btn = document.getElementById('nowBtn');
+    if (btn) btn.addEventListener('click', setLandingNow, {passive:true});
+  });
+</script>
 </body>
 </html>
