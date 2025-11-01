@@ -376,7 +376,7 @@
     }
     function latLonToOSGrid6(lat, lon){
       const rad=Math.PI/180;
-      const a84=6378137, b84=6356752.314245, e2_84=(a84*a84-b84*b*b)/(a84*a84);
+      const a84=6378137, b84=6356752.314245, e2_84=(a84*a84-b84*b84)/(a84*a84);
       const phi=lat*rad, lam=lon*rad; const nu=a84/Math.sqrt(1-e2_84*Math.sin(phi)**2);
       const x=nu*Math.cos(phi)*Math.cos(lam), y=nu*Math.cos(phi)*Math.sin(lam), z=(nu*(1-e2_84))*Math.sin(phi);
       const tx=-446.448, ty=125.157, tz=-542.060, rx=-0.1502*rad/3600, ry=-0.2470*rad/3600, rz=-0.8421*rad/3600, s=20.4894/1e6;
