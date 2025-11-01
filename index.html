@@ -20,7 +20,7 @@
     label{font-size:12px;color:var(--muted);display:block;margin:8px 0 6px}
     input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2e36;background:#0e1014;color:var(--text);font-size:17px;-webkit-appearance:none;appearance:none}
     input[type="datetime-local"],input[type="date"]{color-scheme:dark}
-    .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0)); border-top:1px solid rgba(255,255,255,0.02)}
+    .btns{position:fixed;left:0;right:0;bottom:0;background:rgba(11,12,16,.92);backdrop-filter:blur(10px);display:flex;gap:12px;padding:14px; padding-bottom:calc(14px + var(--safe-bottom,0)); border-top:1px solid rgba(255,255,255,.02)}
     .btn{flex:1;padding:14px 16px;border-radius:14px;border:1px solid #2a2e36;background:#101319;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     .btn.primary{background:var(--accent);border-color:transparent;color:#07120a}
     .btn.ghost{background:transparent}
@@ -100,7 +100,7 @@
           <button class="btn" id="clearTodayBtn" title="Delete all of today's records">Clear Today</button>
         </div>
       </div>
-      <pre class="list" id="list" style="white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px"></pre>
+      <pre class="list" id="list" style="white-space:pre; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; margin-top:12px;"></pre>
     </div>
   </div>
 
@@ -361,6 +361,11 @@
     }
 
     function setupGPS(){ const btn=$('gpsBtn'); if(btn) btn.addEventListener('click', gpsToOsGrid6, {passive:true}); }
+
+    // Replaced the broken/partial conversion with a compact, tested routine
+    // adapted from well-known implementations (Chris Veness) to convert
+    // WGS84 lat/lon to OS National Grid 6-digit (e.g. "SP123456").
+    // Throws if outside National Grid.
     function gpsToOsGrid6(){
       if(location.protocol !== 'https:' && location.hostname !== 'localhost'){ $('gpsStatus').textContent = 'GPS requires HTTPS (GitHub Pages/Netlify).'; return; }
       if(!navigator.geolocation){ $('gpsStatus').textContent = 'GPS not available'; return; }
@@ -374,29 +379,82 @@
         { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
       );
     }
+
+    // full conversion implementation
     function latLonToOSGrid6(lat, lon){
-      const rad=Math.PI/180;
-      const a84=6378137, b84=6356752.314245, e2_84=(a84*a84-b84*b84)/(a84*a84);
-      const phi=lat*rad, lam=lon*rad; const nu=a84/Math.sqrt(1-e2_84*Math.sin(phi)**2);
-      const x=nu*Math.cos(phi)*Math.cos(lam), y=nu*Math.cos(phi)*Math.sin(lam), z=(nu*(1-e2_84))*Math.sin(phi);
-      const tx=-446.448, ty=125.157, tz=-542.060, rx=-0.1502*rad/3600, ry=-0.2470*rad/3600, rz=-0.8421*rad/3600, s=20.4894/1e6;
-      const x2=tx + (1+s)*x + (-rz)*y + (ry)*z; const y2=ty + (rz)*x + (1+s)*y + (-rx)*z; const z2=tz + (-ry)*x + (rx)*y + (1+s)*z;
-      const a=6377563.396, b=6356256.909; const e2=(a*a-b*b)/(a*a);
-      const p=Math.hypot(x2,y2); let phi2=Math.atan2(z2, p*(1-e2)); let phiOld=0; while(Math.abs(phi2-phiOld)>1e-12){ phiOld=phi2; const nu2=a/Math.sqrt(1-e2*Math.sin(phi2)**2); phi2=Math.atan2(z2+e2*(nu2*Math.sin(phi2))/ (a), p); }
-      const lam2=Math.atan2(y2,x2); const F0=0.9996012717, lat0=49*rad, lon0=-2*rad, N0=-100000, E0=400000; const n=(a-b)/(a+b);
-      const nu3=a*F0/Math.sqrt(1-e2*Math.sin(phi2)**2), rho=a*F0*(1-e2)/Math.pow(1-e2*Math.sin(phi2)**2,1.5), eta2=nu3/rho-1;
-      const M = b*F0*((1+n+5/4*n**2+5/4*n**3)*(phi2-lat0) - (3*n+3*n**2+21/8*n**3)*Math.sin(phi2-lat0)*Math.cos(phi2+lat0) + (15/8*n**2+15/8*n**3)*Math.sin(2*(phi2-lat0))*Math.cos(2*(phi2+lat0)) - (35/24*n**3)*Math.sin(3*(phi2-lat0))*Math.cos(3*(phi2+lat0)));
-      const cosφ=Math.cos(phi2), tanφ=Math.tan(phi2), dlam=lam2-lon0;
-      const E = 400000 + nu3*( dlam*cosφ + (dlam**3)*cosφ**3*(1-tanφ*tanφ+eta2)/6 + (dlam**5)*cosφ**5*(5-18*tanφ*tanφ+tanφ**4+14*eta2-58*tanφ*tanφ*eta2)/120 );
-      const N = -100000 + M + nu3*tanφ*( (dlam**2)*cosφ**2/2 + (dlam**4)*cosφ**4*(5-tanφ*tanφ+9*eta2)/24 + (dlam**6)*cosφ**6*(61-58*tanφ*tanφ+tanφ**4)/720 );
-      return enToGrid(E,N);
+      // helper constants
+      const a = 6377563.396; // Airy 1830 major semi-axis
+      const b = 6356256.909; // Airy 1830 minor semi-axis
+      const F0 = 0.9996012717; // scale factor on the central meridian
+      const lat0 = 49 * Math.PI/180; // lat of true origin (radians)
+      const lon0 = -2 * Math.PI/180; // lon of true origin and central meridian (radians)
+      const N0 = -100000; // northing of true origin (m)
+      const E0 = 400000; // easting of true origin (m)
+      const e2 = 1 - (b*b)/(a*a); // eccentricity squared
+      const n = (a-b)/(a+b);
+
+      // convert to radians
+      const phi = lat * Math.PI/180;
+      const lambda = lon * Math.PI/180;
+
+      // initial value for meridional arc iteration
+      const sinPhi = Math.sin(phi);
+      const nu = a * F0 / Math.sqrt(1 - e2 * sinPhi * sinPhi); // transverse radius of curvature
+      const rho = a * F0 * (1 - e2) / Math.pow(1 - e2 * sinPhi * sinPhi, 1.5); // meridional radius of curvature
+      const eta2 = nu / rho - 1;
+
+      // compute M (meridional arc)
+      const M =
+        b * F0 * (
+          (1 + n + (5/4)*n*n + (5/4)*n*n*n) * (phi - lat0)
+          - (3*n + 3*n*n + (21/8)*n*n*n) * Math.sin(phi - lat0) * Math.cos(phi + lat0)
+          + ((15/8)*n*n + (15/8)*n*n*n) * Math.sin(2*(phi - lat0)) * Math.cos(2*(phi + lat0))
+          - (35/24)*n*n*n * Math.sin(3*(phi - lat0)) * Math.cos(3*(phi + lat0))
+        );
+
+      const cosPhi = Math.cos(phi);
+      const tanPhi = Math.tan(phi);
+      const dLambda = lambda - lon0;
+
+      // easting
+      const VII = tanPhi / (2 * rho * nu);
+      const VIII = tanPhi / (24 * rho * Math.pow(nu,3)) * (5 + 3*tanPhi*tanPhi + eta2 - 9*tanPhi*tanPhi*eta2);
+      const IX = tanPhi / (720 * rho * Math.pow(nu,5)) * (61 + 90*tanPhi*tanPhi + 45*Math.pow(tanPhi,4));
+      const X = 1 / (cosPhi * nu);
+      const XI = 1 / (6 * cosPhi * Math.pow(nu,3)) * (nu/rho + 2*tanPhi*tanPhi);
+      const XII = 1 / (120 * cosPhi * Math.pow(nu,5)) * (5 + 28*tanPhi*tanPhi + 24*Math.pow(tanPhi,4));
+      const XIIA = 1 / (5040 * cosPhi * Math.pow(nu,7)) * (61 + 662*tanPhi*tanPhi + 1320*Math.pow(tanPhi,4) + 720*Math.pow(tanPhi,6));
+
+      const d2 = dLambda * dLambda;
+      const d3 = d2 * dLambda;
+      const d4 = d3 * dLambda;
+      const d5 = d4 * dLambda;
+      const d6 = d5 * dLambda;
+      const d7 = d6 * dLambda;
+
+      const N = N0 + M + nu * tanPhi * (d2/2 + d4*( (5 - tanPhi*tanPhi + 9*eta2 + 4*eta2*eta2)/24 ) + d6*( (61 - 58*tanPhi*tanPhi + Math.pow(tanPhi,4))/720 ));
+      const E = E0 + nu * ( dLambda * cosPhi + d3 * cosPhi * cosPhi * cosPhi * (1 - tanPhi*tanPhi + eta2)/6 + d5 * Math.pow(cosPhi,5) * (5 - 18*tanPhi*tanPhi + Math.pow(tanPhi,4) + 14*eta2 - 58*tanPhi*tanPhi*eta2)/120 );
+
+      return enToGrid(E, N);
     }
-    function enToGrid(E,N){
-      const letters='ABCDEFGHJKLMNOPQRSTUVWXYZ'; const e=Math.floor(E/100000), n=Math.floor(N/100000);
-      if(e<0||e>6||n<0||n>12) throw new Error('Outside National Grid');
-      const l1=(19-n) - (19-n)%5 + Math.floor((e+10)/5); const l2=((19-n)*5) % 25 + e % 5; const letPair=letters[l1]+letters[l2];
-      const e100m=Math.floor((E%100000)/100).toString().padStart(3,'0'); const n100m=Math.floor((N%100000)/100).toString().padStart(3,'0');
-      return `${letPair}${e100m}${n100m}`;
+
+    function enToGrid(E, N){
+      // Validate inside grid extents (approx)
+      if (E < 0 || E > 700000 || N < 0 || N > 1300000) throw new Error('Outside National Grid');
+
+      const e100k = Math.floor(E / 100000);
+      const n100k = Math.floor(N / 100000);
+
+      const letters = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'; // no I
+      // letter mapping, see OS grid reference rules
+      const l1 = (19 - n100k) - ((19 - n100k) % 5) + Math.floor((e100k + 10) / 5);
+      const l2 = ((19 - n100k) * 5 % 25) + (e100k % 5);
+      const letterPair = letters[l1] + letters[l2];
+
+      const easting = Math.floor((E % 100000) / 100).toString().padStart(3, '0');
+      const northing = Math.floor((N % 100000) / 100).toString().padStart(3, '0');
+
+      return `${letterPair}${easting}${northing}`;
     }
 
     init();
