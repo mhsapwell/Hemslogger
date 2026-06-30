@@ -84,6 +84,13 @@
           <input id="date" type="date"/>
         </div>
       </div>
+      <div class="row">
+        <div>
+          <label>Aircraft registration (last 4)</label>
+          <input id="aircraftReg" type="text" maxlength="4" placeholder="ABCD"/>
+        </div>
+        <div></div>
+      </div>
 
       <div id="summary" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
     </div>
@@ -122,6 +129,7 @@
     const pad = (n)=>String(n).padStart(2,'0');
     const toDT = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const todayStr = ()=>{const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+    const makeId = ()=>window.crypto && typeof window.crypto.randomUUID === 'function' ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     function minutesToHHMM(mins){
       mins = Math.max(0, Math.floor(mins||0));
@@ -184,9 +192,10 @@
     }
 
     function populateFuelStart(){
-      const all = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+      const all = loadAll();
       if(all.length > 0){
         const last = all[all.length-1];
+        if(last.aircraftReg){ $('aircraftReg').value = registrationSuffix(last.aircraftReg); }
         if(last.fuelEnd){ baseStartKg = parseFloat(last.fuelEnd)||0; $('fuelStart').value = baseStartKg; return; }
       }
       baseStartKg = parseFloat($('fuelStart').value)||0;
@@ -210,13 +219,15 @@
     function save(){
       const tOff = $('tOff').value;
       const tLand = $('tLand').value;
+      const aircraftReg = registrationSuffix($('aircraftReg').value);
+      $('aircraftReg').value = aircraftReg;
       let flightHM = diffHHMM(tOff, tLand);
       if(!flightHM){
         const mins = parseInt($('flightMins').value||'0',10);
         if(mins>0) flightHM = minutesToHHMM(mins);
       }
       const rec={
-        id:crypto.randomUUID(),
+        id:makeId(),
         date:$('date').value,
         fuelAdded:$('fuelAdded').value,
         fuelStart:$('fuelStart').value,
@@ -224,9 +235,10 @@
         tOff,
         tLand,
         flightHM,
-        fuelEnd:$('fuelEnd').value
+        fuelEnd:$('fuelEnd').value,
+        aircraftReg
       };
-      const all=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+      const all=loadAll();
       all.push(rec);
       localStorage.setItem(LS_KEY,JSON.stringify(all));
       baseStartKg = parseFloat(rec.fuelEnd)||0;
@@ -302,18 +314,41 @@
       const rows=loadAll();
       const visible=rows.filter(r=>currentFilter==='all'?true:(r.date===todayStr()));
       if(!visible.length){ alert('No records to export.'); return; }
-      const headers=['date','fuelAdded','fuelStart','loc','tOff','tLand','flightTime','fuelEnd'];
+      const headers=['Date','Departure_Airfield','Departure_Time','Arrival_Airfield','Arrival_Time','Aircraft_Type','Aircraft_Registration','Total_Time','MultiPilot_Time','PIC_Name','Takeoff_Day','Landing_Day','Takeoff_Night','Landing_Night','Night_Time','IFR_Time','XC_Time','PIC_Time','CoPilot_Time','Dual_Time','Instructor_Time','Custom1_Time','Custom2_Time','Custom3_Time','Custom4_Time','Remarks','Simulator_Time','Sim_Type'];
+      let previousLoc = '';
       const csv=[headers.join(',')].concat(visible.map(r=>{
+        const flightTime = r.flightHM || diffHHMM(r.tOff, r.tLand) || '';
         const obj={
-          date:r.date||'',
-          fuelAdded:r.fuelAdded||'',
-          fuelStart:r.fuelStart||'',
-          loc:r.loc||'',
-          tOff:(r.tOff||'').split('T')[1]?.slice(0,5)||'',
-          tLand:(r.tLand||'').split('T')[1]?.slice(0,5)||'',
-          flightTime: r.flightHM || diffHHMM(r.tOff, r.tLand) || '',
-          fuelEnd:r.fuelEnd||''
+          Date:formatLogbookDate(r.date),
+          Departure_Airfield:previousLoc,
+          Departure_Time:timeOnly(r.tOff),
+          Arrival_Airfield:r.loc||'',
+          Arrival_Time:timeOnly(r.tLand),
+          Aircraft_Type:'',
+          Aircraft_Registration:formatAircraftRegistration(r.aircraftReg),
+          Total_Time:flightTime,
+          MultiPilot_Time:'',
+          PIC_Name:'Self',
+          Takeoff_Day:'1',
+          Landing_Day:'1',
+          Takeoff_Night:'0',
+          Landing_Night:'0',
+          Night_Time:'',
+          IFR_Time:'',
+          XC_Time:'',
+          PIC_Time:flightTime,
+          CoPilot_Time:'',
+          Dual_Time:'',
+          Instructor_Time:'',
+          Custom1_Time:'',
+          Custom2_Time:'',
+          Custom3_Time:'',
+          Custom4_Time:'',
+          Remarks:'',
+          Simulator_Time:'',
+          Sim_Type:''
         };
+        previousLoc = r.loc || '';
         return headers.map(h=>{
           const s=String(obj[h]??'');
           return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
@@ -323,6 +358,27 @@
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
       a.download=`hems-records-${currentFilter==='all'?'all':todayStr()}.csv`;
       document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function timeOnly(dt){
+      return (dt||'').split('T')[1]?.slice(0,5)||'';
+    }
+
+    function formatLogbookDate(dateStr){
+      const parts = (dateStr||'').split('-');
+      if(parts.length!==3) return dateStr||'';
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function registrationSuffix(value){
+      const cleaned = (value||'').toString().trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+      const withoutPrefix = cleaned.startsWith('G') && cleaned.length > 4 ? cleaned.slice(1) : cleaned;
+      return withoutPrefix.slice(-4);
+    }
+
+    function formatAircraftRegistration(value){
+      const suffix = registrationSuffix(value);
+      return suffix ? `G-${suffix}` : '';
     }
 
     $('saveBtn').addEventListener('click',save);
@@ -356,7 +412,7 @@
     function setupInstall(){
       if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
       let deferredPrompt=null;
-      window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('installBtn').style.opacity='1'; }, {passive:true});
+      window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; $('installBtn').style.opacity='1'; });
       $('installBtn').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; } }, {passive:true});
     }
 
