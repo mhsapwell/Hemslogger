@@ -316,11 +316,13 @@
       if(!visible.length){ alert('No records to export.'); return; }
       const headers=['Date','Departure_Airfield','Departure_Time','Arrival_Airfield','Arrival_Time','Aircraft_Type','Aircraft_Registration','Total_Time','MultiPilot_Time','PIC_Name','Takeoff_Day','Landing_Day','Takeoff_Night','Landing_Night','Night_Time','IFR_Time','XC_Time','PIC_Time','CoPilot_Time','Dual_Time','Instructor_Time','Custom1_Time','Custom2_Time','Custom3_Time','Custom4_Time','Remarks','Simulator_Time','Sim_Type'];
       let previousLoc = '';
+      let previousDate = '';
       const csv=[headers.join(',')].concat(visible.map(r=>{
         const flightTime = r.flightHM || diffHHMM(r.tOff, r.tLand) || '';
+        const departureAirfield = r.date === previousDate ? previousLoc : '';
         const obj={
           Date:formatLogbookDate(r.date),
-          Departure_Airfield:previousLoc,
+          Departure_Airfield:departureAirfield,
           Departure_Time:timeOnly(r.tOff),
           Arrival_Airfield:r.loc||'',
           Arrival_Time:timeOnly(r.tLand),
@@ -349,6 +351,7 @@
           Sim_Type:''
         };
         previousLoc = r.loc || '';
+        previousDate = r.date || '';
         return headers.map(h=>{
           const s=String(obj[h]??'');
           return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
